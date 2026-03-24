@@ -1,0 +1,36 @@
+import socket
+import threading
+import time
+import sqlite3
+
+
+PORT = 5050
+SERVER = "127.0.0.1"
+ADDR = (SERVER, PORT)
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(ADDR)
+
+conn = sqlite3.connect("chat.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+ messages (
+    id INTEGER PRIMARY KEY,
+    content TEXT
+)
+""")
+
+def cliente(conn, addr):
+    pass
+
+def empezar():
+    server.listen()
+    while True:
+
+
+
+
+
+
+
