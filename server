@@ -27,6 +27,12 @@ def cliente(conn, addr):
 def empezar():
     server.listen()
     while True:
+        conn, addr=server.accept()
+        thread=threading.Thread(target=cliente,args=(conn, addr))
+        thread.start()
+        print(f"[CONEXIONES] {threading.active_count()-1}")
+
+
 
 
 
