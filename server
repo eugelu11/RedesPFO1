@@ -2,10 +2,9 @@ import socket
 import threading
 import sqlite3
 
-# Configuración
 HEADER = 64
 PORT = 5050
-SERVER = "127.0.0.1"
+SERVER =socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 MENSAJE_DESCONEXION = "!DESCONECTAR"
