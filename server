@@ -1,83 +1,83 @@
 import socket
 import threading
 import sqlite3
+from datetime import datetime
 
 HEADER = 64
-PORT = 5050
-SERVER =socket.gethostbyname(socket.gethostname())
+PORT = 5000
+SERVER = "127.0.0.1"
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
-MENSAJE_DESCONEXION = "!DESCONECTAR"
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(ADDR)
+MENSAJE_DESCONEXION = "exito"
 
 def init_db():
     conn = sqlite3.connect("chat.db")
     cursor = conn.cursor()
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT
+        contenido TEXT,
+        fecha_envio TEXT,
+        ip_cliente TEXT
     )
     """)
-
     conn.commit()
     conn.close()
 
-def cliente(conn_socket, addr):
-    print(f"[NUEVA CONEXIÓN] {addr} conectado.")
-
+def manejar_cliente(conn_socket, addr):
     db = sqlite3.connect("chat.db")
     cursor = db.cursor()
-
     conectado = True
+
     while conectado:
         try:
             len_mensaje = conn_socket.recv(HEADER).decode(FORMAT)
-
             if not len_mensaje:
                 break
 
-            len_mensaje = int(len_mensaje)
+            len_mensaje = int(len_mensaje.strip())
             mensaje = conn_socket.recv(len_mensaje).decode(FORMAT)
 
             if mensaje == MENSAJE_DESCONEXION:
-                conectado = False
-            else:
-                cursor.execute(
-                    "INSERT INTO messages (content) VALUES (?)",
-                    (mensaje,)
-                )
-                db.commit()
+                break
 
-            print(f"[{addr}] {mensaje}")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            cursor.execute("""
+                INSERT INTO messages (contenido, fecha_envio, ip_cliente)
+                VALUES (?, ?, ?)
+            """, (mensaje, timestamp, addr[0]))
+
+            db.commit()
+
+            respuesta = f"Mensaje recibido: {timestamp}"
+            respuesta_bytes = respuesta.encode(FORMAT)
+
+            len_respuesta = str(len(respuesta_bytes)).encode(FORMAT)
+            len_respuesta += b' ' * (HEADER - len(len_respuesta))
+
+            conn_socket.sendall(len_respuesta)
+            conn_socket.sendall(respuesta_bytes)
 
         except:
-            print(f"[ERROR] Conexión con {addr} perdida.")
             break
 
     db.close()
     conn_socket.close()
-    print(f"[DESCONECTADO] {addr}")
 
-def empezar():
+def iniciar_servidor():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        server.bind(ADDR)
+    except:
+        return
+
     server.listen()
-    print(f"[ESCUCHANDO] Servidor en {SERVER}:{PORT}")
 
     while True:
-        conn_socket, addr = server.accept()
-        thread = threading.Thread(target=cliente, args=(conn_socket, addr))
+        conn, addr = server.accept()
+        thread = threading.Thread(target=manejar_cliente, args=(conn, addr))
         thread.start()
 
-        print(f"[CONEXIONES ACTIVAS] {threading.active_count() - 1}")
-
 init_db()
-print("[INICIANDO] Servidor...")
-empezar()
-
-
-
-
-
+iniciar_servidor()
