@@ -27,9 +27,8 @@ def init_db():
 def manejar_cliente(conn_socket, addr):
     db = sqlite3.connect("chat.db")
     cursor = db.cursor()
-    conectado = True
 
-    while conectado:
+    while True:
         try:
             len_mensaje = conn_socket.recv(HEADER).decode(FORMAT)
             if not len_mensaje:

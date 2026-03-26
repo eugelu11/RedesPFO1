@@ -21,10 +21,16 @@ def mandar(mensaje):
     cliente.sendall(mandar_len)
     cliente.sendall(mensaje_bytes)
 
-    len_respuesta = cliente.recv(HEADER).decode(FORMAT)
-    len_respuesta = int(len_respuesta.strip())
+    if mensaje == MENSAJE_DESCONEXION:
+        return
 
+    len_respuesta = cliente.recv(HEADER).decode(FORMAT)
+    if not len_respuesta:
+        return
+
+    len_respuesta = int(len_respuesta.strip())
     respuesta = cliente.recv(len_respuesta).decode(FORMAT)
+
     print(respuesta)
 
 while True:
