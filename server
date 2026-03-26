@@ -46,7 +46,6 @@ def cliente(conn_socket, addr):
             if mensaje == MENSAJE_DESCONEXION:
                 conectado = False
             else:
-                # Guardar en DB
                 cursor.execute(
                     "INSERT INTO messages (content) VALUES (?)",
                     (mensaje,)
